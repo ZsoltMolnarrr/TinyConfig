@@ -90,9 +90,9 @@ public class ConfigManager<Config> {
         return new Builder(this);
     }
 
-    public static class Builder {
-        ConfigManager manager;
-        Builder(ConfigManager manager) {
+    public class Builder {
+        ConfigManager<Config> manager;
+        Builder(ConfigManager<Config> manager) {
             this.manager = manager;
         }
 
@@ -111,7 +111,7 @@ public class ConfigManager<Config> {
             return this;
         }
 
-        public ConfigManager build() {
+        public ConfigManager<Config> build() {
             return manager;
         }
     }

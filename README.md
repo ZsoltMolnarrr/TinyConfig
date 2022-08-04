@@ -1,5 +1,5 @@
 # 🔧 TinyConfig
-Super tiny server side config library.
+Super small server side config library.
 
 ## Installation
 
@@ -20,7 +20,7 @@ dependencies {
 ## Usage
 
 ```java
-private final ConfigManager manager = new ConfigManager<ExampleConfig>
+private final ConfigManager<ExampleConfig> manager = new ConfigManager<ExampleConfig>
         ("server", new ExampleConfig())
                 .builder()
                 .enableLogging(true)
