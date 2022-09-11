@@ -2,7 +2,6 @@ package net.tinyconfig;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +54,7 @@ public class ConfigManager<Config> {
     public void save() {
         var config = currentConfig;
         var filePath = getConfigFilePath();
-        Path configDir = FabricLoader.getInstance().getConfigDir();
+        Path configDir = PlatformHelper.getConfigDir();
 
         try {
             if (directory != null && !directory.isEmpty()) {
@@ -82,7 +81,7 @@ public class ConfigManager<Config> {
         if (directory != null && !directory.isEmpty()) {
             configFilePath = directory + "/" + configFilePath;
         }
-        Path configDir = FabricLoader.getInstance().getConfigDir();
+        Path configDir = PlatformHelper.getConfigDir();
         return configDir.resolve(configFilePath);
     }
 
