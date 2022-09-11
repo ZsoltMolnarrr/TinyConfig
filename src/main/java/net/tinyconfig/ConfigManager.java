@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -44,7 +43,7 @@ public class ConfigManager<Config> {
                 currentConfig = (Config) gson.fromJson(reader, currentConfig.getClass());
                 reader.close();
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             if (isLoggingEnabled) {
                 LOGGER.error("Failed loading " + configName + " config: " + e.getMessage());
             }
@@ -69,7 +68,7 @@ public class ConfigManager<Config> {
                 var gson = new Gson();
                 LOGGER.info(configName + " config written: " + gson.toJson(config));
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             if (isLoggingEnabled) {
                 LOGGER.error("Failed writing " + configName + " config: " + e.getMessage());
             }
