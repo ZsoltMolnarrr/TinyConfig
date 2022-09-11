@@ -2,9 +2,9 @@ package net.tinyconfig;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mojang.logging.LogUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class ConfigManager<Config> {
-    static final Logger LOGGER = LogUtils.getLogger();
+    static final Logger LOGGER = LoggerFactory.getLogger("tiny-config");
 
     public Config currentConfig;
     public String configName;

@@ -1,9 +1,9 @@
 plugins {
-    id 'fabric-loom' version '0.12-SNAPSHOT'
+    id 'java-library'
     id 'maven-publish'
 }
 
-version = project.mod_version
+version = project.lib_version
 group = project.maven_group
 
 repositories {
@@ -12,22 +12,20 @@ repositories {
     // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
     // See https://docs.gradle.org/current/userguide/declaring_repositories.html
     // for more information about repositories.
+    mavenCentral()
+    maven {
+        name = 'Fabric'
+        url = 'https://maven.fabricmc.net/'
+    }
+    maven { url = 'https://maven.minecraftforge.net/' }
 }
 
 dependencies {
-    // To change the versions see the gradle.properties file
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-}
+    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'org.slf4j:slf4j-api:1.7.36'
 
-processResources {
-    inputs.property "version", project.version
-    filteringCharset "UTF-8"
-
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
-    }
+    implementation("net.fabricmc:fabric-loader:${project.fabric_loader_version}") { transitive false }
+    implementation("net.minecraftforge:fmlloader:${project.forge_loader_version}") { transitive false }
 }
 
 def targetJavaVersion = 17
@@ -64,7 +62,8 @@ jar {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            from components.java
+            artifact jar
+            artifact sourcesJar
         }
     }
 
