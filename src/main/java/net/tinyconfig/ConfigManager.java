@@ -13,7 +13,7 @@ import java.nio.file.Path;
 public class ConfigManager<Config> {
     static final Logger LOGGER = LoggerFactory.getLogger("tiny-config");
 
-    public Config currentConfig;
+    public Config value;
     public String configName;
     public String directory;
     public boolean isLoggingEnabled = false;
@@ -21,7 +21,7 @@ public class ConfigManager<Config> {
 
     public ConfigManager(String configName, Config defaultConfig) {
         this.configName = configName;
-        this.currentConfig = defaultConfig;
+        this.value = defaultConfig;
     }
 
     public void refresh() {
@@ -40,7 +40,7 @@ public class ConfigManager<Config> {
             if (Files.exists(filePath)) {
                 // Read
                 Reader reader = Files.newBufferedReader(filePath);
-                currentConfig = (Config) gson.fromJson(reader, currentConfig.getClass());
+                value = (Config) gson.fromJson(reader, value.getClass());
                 reader.close();
             }
         } catch (Exception e) {
@@ -51,7 +51,7 @@ public class ConfigManager<Config> {
     }
 
     public void save() {
-        var config = currentConfig;
+        var config = value;
         var filePath = getConfigFilePath();
         Path configDir = PlatformHelper.getConfigDir();
 
