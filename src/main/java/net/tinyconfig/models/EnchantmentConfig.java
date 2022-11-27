@@ -1,6 +1,7 @@
 package net.tinyconfig.models;
 
 public class EnchantmentConfig {
+    public boolean enabled = true;
     public int max_level = 0;
     public int min_cost = 0;
     public int step_cost = 0;
