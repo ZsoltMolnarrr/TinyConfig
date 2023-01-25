@@ -9,6 +9,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Function;
 
 public class ConfigManager<Config> {
     static final Logger LOGGER = LoggerFactory.getLogger("tiny-config");
@@ -18,6 +19,7 @@ public class ConfigManager<Config> {
     public String directory;
     public boolean isLoggingEnabled = false;
     public boolean sanitize = false;
+    public Function<Config, Boolean> validator;
 
     public ConfigManager(String configName, Config defaultConfig) {
         this.configName = configName;
@@ -34,13 +36,15 @@ public class ConfigManager<Config> {
 
     public void load() {
         var filePath = getConfigFilePath();
-
         try {
             var gson = new Gson();
             if (Files.exists(filePath)) {
                 // Read
                 Reader reader = Files.newBufferedReader(filePath);
-                value = (Config) gson.fromJson(reader, value.getClass());
+                var newValue = (Config) gson.fromJson(reader, value.getClass());
+                if (validator == null || validator.apply(value)) {
+                    value = newValue;
+                }
                 reader.close();
             }
         } catch (Exception e) {
@@ -106,6 +110,11 @@ public class ConfigManager<Config> {
 
         public Builder sanitize(boolean sanitize) {
             manager.sanitize = sanitize;
+            return this;
+        }
+
+        public Builder validate(Function<Config, Boolean> validator) {
+            manager.validator = validator;
             return this;
         }
 
