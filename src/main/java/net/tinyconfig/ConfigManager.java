@@ -42,7 +42,7 @@ public class ConfigManager<Config> {
                 // Read
                 Reader reader = Files.newBufferedReader(filePath);
                 var newValue = (Config) gson.fromJson(reader, value.getClass());
-                if (validator == null || validator.apply(value)) {
+                if (validator == null || validator.apply(newValue)) {
                     value = newValue;
                 }
                 reader.close();
