@@ -20,6 +20,7 @@ public class ConfigManager<Config> {
     public boolean isLoggingEnabled = false;
     public boolean sanitize = false;
     public Function<Config, Boolean> validator;
+    public Function<Config, Config> constraint;
 
     public ConfigManager(String configName, Config defaultConfig) {
         this.configName = configName;
@@ -42,7 +43,12 @@ public class ConfigManager<Config> {
                 // Read
                 Reader reader = Files.newBufferedReader(filePath);
                 var newValue = (Config) gson.fromJson(reader, value.getClass());
-                if (validator == null || validator.apply(newValue)) {
+                // Validate
+                boolean isValid = validator == null || validator.apply(newValue);
+                if (isValid) {
+                    if (constraint != null) {
+                        newValue = constraint.apply(newValue);
+                    }
                     value = newValue;
                 }
                 reader.close();
@@ -115,6 +121,11 @@ public class ConfigManager<Config> {
 
         public Builder validate(Function<Config, Boolean> validator) {
             manager.validator = validator;
+            return this;
+        }
+
+        public Builder constrain(Function<Config, Config> constraint) {
+            manager.constraint = constraint;
             return this;
         }
 
