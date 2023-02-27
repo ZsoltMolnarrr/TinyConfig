@@ -2,6 +2,7 @@ package net.tinyconfig;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.tinyconfig.versioning.Versionable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,7 @@ public class ConfigManager<Config> {
     public String directory;
     public boolean isLoggingEnabled = false;
     public boolean sanitize = false;
+    public int requiredSchemaVersion = 0;
     public Function<Config, Boolean> validator;
     public Function<Config, Config> constraint;
 
@@ -30,7 +32,7 @@ public class ConfigManager<Config> {
     public void refresh() {
         var filePath = getConfigFilePath();
         load();
-        if (sanitize || !Files.exists(filePath)) {
+        if (this.sanitize || this.isVersioned() || !Files.exists(filePath)) {
             save();
         }
     }
@@ -43,8 +45,14 @@ public class ConfigManager<Config> {
                 // Read
                 Reader reader = Files.newBufferedReader(filePath);
                 var newValue = (Config) gson.fromJson(reader, value.getClass());
+                // Version
+                boolean meetsRequiredVersion = true;
+                if (newValue instanceof Versionable versionable) {
+                    meetsRequiredVersion = versionable.getSchemaVersion() >= requiredSchemaVersion;
+                    versionable.setSchemaVersion(requiredSchemaVersion);
+                }
                 // Validate
-                boolean isValid = validator == null || validator.apply(newValue);
+                boolean isValid = (validator == null || validator.apply(newValue)) && meetsRequiredVersion;
                 if (isValid) {
                     if (constraint != null) {
                         newValue = constraint.apply(newValue);
@@ -85,6 +93,10 @@ public class ConfigManager<Config> {
         }
     }
 
+    private boolean isVersioned() {
+        return (this.value instanceof Versionable) && requiredSchemaVersion > 0;
+    }
+
     private Path getConfigFilePath() {
         var configFilePath = configName + ".json";
         if (directory != null && !directory.isEmpty()) {
@@ -92,6 +104,14 @@ public class ConfigManager<Config> {
         }
         Path configDir = PlatformHelper.getConfigDir();
         return configDir.resolve(configFilePath);
+    }
+
+    private int schemaVersion(Config config) {
+        if (config instanceof Versionable versionable) {
+            return versionable.getSchemaVersion();
+        } else {
+            return 0;
+        }
     }
 
     public Builder builder() {
