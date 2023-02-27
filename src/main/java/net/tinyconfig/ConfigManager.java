@@ -139,6 +139,11 @@ public class ConfigManager<Config> {
             return this;
         }
 
+        public Builder schemaVersion(int requiredSchemaVersion) {
+            manager.requiredSchemaVersion = requiredSchemaVersion;
+            return this;
+        }
+
         public Builder validate(Function<Config, Boolean> validator) {
             manager.validator = validator;
             return this;
