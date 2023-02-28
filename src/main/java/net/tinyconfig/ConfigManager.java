@@ -45,11 +45,10 @@ public class ConfigManager<Config> {
                 // Read
                 Reader reader = Files.newBufferedReader(filePath);
                 var newValue = (Config) gson.fromJson(reader, value.getClass());
-                // Version
+                // Version check
                 boolean meetsRequiredVersion = true;
                 if (newValue instanceof Versionable versionable) {
                     meetsRequiredVersion = versionable.getSchemaVersion() >= requiredSchemaVersion;
-                    versionable.setSchemaVersion(requiredSchemaVersion);
                 }
                 // Validate
                 boolean isValid = (validator == null || validator.apply(newValue)) && meetsRequiredVersion;
@@ -58,6 +57,10 @@ public class ConfigManager<Config> {
                         newValue = constraint.apply(newValue);
                     }
                     value = newValue;
+                }
+                // Version save
+                if (this.value instanceof Versionable versionable) {
+                    versionable.setSchemaVersion(requiredSchemaVersion);
                 }
                 reader.close();
             }
@@ -139,8 +142,11 @@ public class ConfigManager<Config> {
             return this;
         }
 
-        public Builder schemaVersion(int requiredSchemaVersion) {
-            manager.requiredSchemaVersion = requiredSchemaVersion;
+        public Builder schemaVersion(int required) {
+            if (!(manager.value instanceof Versionable)) {
+                throw new ExceptionInInitializerError("To use `schemaVersion` your config type has to extend `VersionableConfig` or provide a custom implementation for `Versionable`.");
+            }
+            manager.requiredSchemaVersion = required;
             return this;
         }
 
