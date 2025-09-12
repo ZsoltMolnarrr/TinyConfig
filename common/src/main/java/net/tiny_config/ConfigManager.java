@@ -1,8 +1,8 @@
-package net.tinyconfig;
+package net.tiny_config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.tinyconfig.versioning.Versionable;
+import net.tiny_config.versioning.Versionable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +74,7 @@ public class ConfigManager<Config> {
     public void save() {
         var config = value;
         var filePath = getConfigFilePath();
-        Path configDir = PlatformHelper.getConfigDir();
+        Path configDir = Platform.util().getConfigDir();
 
         try {
             if (directory != null && !directory.isEmpty()) {
@@ -105,7 +105,7 @@ public class ConfigManager<Config> {
         if (directory != null && !directory.isEmpty()) {
             configFilePath = directory + "/" + configFilePath;
         }
-        Path configDir = PlatformHelper.getConfigDir();
+        Path configDir = Platform.util().getConfigDir();
         return configDir.resolve(configFilePath);
     }
 

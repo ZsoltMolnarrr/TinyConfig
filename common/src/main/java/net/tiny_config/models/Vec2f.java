@@ -1,4 +1,4 @@
-package net.tinyconfig.models;
+package net.tiny_config.models;
 
 public class Vec2f {
     public static final Vec2f ZERO = new Vec2f(0.0F, 0.0F);

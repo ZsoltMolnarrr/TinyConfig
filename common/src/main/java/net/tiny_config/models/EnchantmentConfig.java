@@ -1,4 +1,4 @@
-package net.tinyconfig.models;
+package net.tiny_config.models;
 
 public class EnchantmentConfig {
     public boolean enabled = true;

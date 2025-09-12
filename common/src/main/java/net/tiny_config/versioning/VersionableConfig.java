@@ -1,4 +1,4 @@
-package net.tinyconfig.versioning;
+package net.tiny_config.versioning;
 
 public class VersionableConfig implements Versionable {
     public int schema_version = 0;

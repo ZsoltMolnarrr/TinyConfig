@@ -1,4 +1,4 @@
-package net.tinyconfig.versioning;
+package net.tiny_config.versioning;
 
 public interface Versionable {
     int getSchemaVersion();

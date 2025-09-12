@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "tiny_config",
+  "version": "${version}",
+  "name": "Tiny Config",
+  "description": "A very small config lib",
+  "authors": [
+    "Daedelus"
+  ],
+  "contact": {
+    "homepage": "https://fabricmc.net/",
+    "sources": "https://github.com/FabricMC/fabric-example-mod"
+  },
+  "license": "CC0-1.0",
+  "icon": "logo.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.tiny_config.fabric.ExampleModFabric"
+    ],
+    "client": [
+      "net.tiny_config.fabric.client.ExampleModFabricClient"
+    ]
+  },
+  "mixins": [
+    "tiny_config.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": "*",
+    "minecraft": ">1.21",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
