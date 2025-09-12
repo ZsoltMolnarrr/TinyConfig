@@ -16,14 +16,14 @@ logoFile = "logo.png"
 [[dependencies.tiny_config]]
 modId = "neoforge"
 type = "required"
-versionRange = "[21.1,)"
+versionRange = "[21,)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.tiny_config]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.21.1,)"
+versionRange = "[1.21,)"
 ordering = "NONE"
 side = "BOTH"
 
