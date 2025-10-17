@@ -23,6 +23,7 @@ public class ConfigManager<Config> {
     public int requiredSchemaVersion = 0;
     public Function<Config, Boolean> validator;
     public Function<Config, Config> constraint;
+    private boolean loaded = false;
 
     public ConfigManager(String configName, Config defaultConfig) {
         this.configName = configName;
@@ -35,6 +36,13 @@ public class ConfigManager<Config> {
         if (this.sanitize || this.isVersioned() || !Files.exists(filePath)) {
             save();
         }
+    }
+
+    synchronized public Config safeValue() {
+        if (!loaded) {
+            refresh();
+        }
+        return value;
     }
 
     public void load() {
@@ -69,6 +77,7 @@ public class ConfigManager<Config> {
                 LOGGER.error("Failed loading " + configName + " config: " + e.getMessage());
             }
         }
+        loaded = true;
     }
 
     public void save() {
