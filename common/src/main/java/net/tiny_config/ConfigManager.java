@@ -15,7 +15,9 @@ import java.util.function.Function;
 public class ConfigManager<Config> {
     static final Logger LOGGER = LoggerFactory.getLogger("tiny-config");
 
-    public Config value;
+    public volatile Config value;
+    private volatile boolean loaded = false;
+
     public String configName;
     public String directory;
     public boolean isLoggingEnabled = false;
@@ -23,7 +25,8 @@ public class ConfigManager<Config> {
     public int requiredSchemaVersion = 0;
     public Function<Config, Boolean> validator;
     public Function<Config, Config> constraint;
-    private boolean loaded = false;
+
+    private final Object ioLock = new Object(); // avoid I/O races
 
     public ConfigManager(String configName, Config defaultConfig) {
         this.configName = configName;
@@ -32,75 +35,86 @@ public class ConfigManager<Config> {
 
     public void refresh() {
         var filePath = getConfigFilePath();
-        load();
-        if (this.sanitize || this.isVersioned() || !Files.exists(filePath)) {
-            save();
+        synchronized (this) {
+            load();
+            if (this.sanitize || this.isVersioned() || !Files.exists(filePath)) {
+                save();
+            }
         }
     }
 
-    synchronized public Config safeValue() {
+    public Config safeValue() {
         if (!loaded) {
-            refresh();
+            // Only lock if not loaded yet
+            synchronized (this) {
+                if (!loaded) {
+                    refresh();
+                }
+            }
         }
         return value;
     }
 
     public void load() {
-        var filePath = getConfigFilePath();
-        try {
-            var gson = new Gson();
-            if (Files.exists(filePath)) {
-                // Read
-                Reader reader = Files.newBufferedReader(filePath);
-                var newValue = (Config) gson.fromJson(reader, value.getClass());
-                // Version check
-                boolean meetsRequiredVersion = true;
-                if (newValue instanceof Versionable versionable) {
-                    meetsRequiredVersion = versionable.getSchemaVersion() >= requiredSchemaVersion;
-                }
-                // Validate
-                boolean isValid = (validator == null || validator.apply(newValue)) && meetsRequiredVersion;
-                if (isValid) {
-                    if (constraint != null) {
-                        newValue = constraint.apply(newValue);
+        synchronized (ioLock) {
+            var filePath = getConfigFilePath();
+            try {
+                var gson = new Gson();
+                if (Files.exists(filePath)) {
+                    // Read
+                    Reader reader = Files.newBufferedReader(filePath);
+                    var newValue = (Config) gson.fromJson(reader, value.getClass());
+                    // Version check
+                    boolean meetsRequiredVersion = true;
+                    if (newValue instanceof Versionable versionable) {
+                        meetsRequiredVersion = versionable.getSchemaVersion() >= requiredSchemaVersion;
                     }
-                    value = newValue;
+                    // Validate
+                    boolean isValid = (validator == null || validator.apply(newValue)) && meetsRequiredVersion;
+                    if (isValid) {
+                        if (constraint != null) {
+                            newValue = constraint.apply(newValue);
+                        }
+                        value = newValue;
+                    }
+                    // Version save
+                    if (this.value instanceof Versionable versionable) {
+                        versionable.setSchemaVersion(requiredSchemaVersion);
+                    }
+                    reader.close();
                 }
-                // Version save
-                if (this.value instanceof Versionable versionable) {
-                    versionable.setSchemaVersion(requiredSchemaVersion);
+            } catch (Exception e) {
+                if (isLoggingEnabled) {
+                    LOGGER.error("Failed loading " + configName + " config: " + e.getMessage());
                 }
-                reader.close();
             }
-        } catch (Exception e) {
-            if (isLoggingEnabled) {
-                LOGGER.error("Failed loading " + configName + " config: " + e.getMessage());
-            }
+            loaded = true;
         }
-        loaded = true;
     }
 
     public void save() {
         var config = value;
-        var filePath = getConfigFilePath();
-        Path configDir = Platform.util().getConfigDir();
+        synchronized (ioLock) {
+            var filePath = getConfigFilePath();
+            Path configDir = Platform.util().getConfigDir();
 
-        try {
-            if (directory != null && !directory.isEmpty()) {
-                var directoryPath = configDir.resolve(directory);
-                Files.createDirectories(directoryPath);
-            }
-            var prettyGson = new GsonBuilder().setPrettyPrinting().create();
-            Writer writer = Files.newBufferedWriter(filePath);
-            writer.write(prettyGson.toJson(config));
-            writer.close();
-            if (isLoggingEnabled) {
-                var gson = new Gson();
-                LOGGER.info(configName + " config written: " + gson.toJson(config));
-            }
-        } catch (Exception e) {
-            if (isLoggingEnabled) {
-                LOGGER.error("Failed writing " + configName + " config: " + e.getMessage());
+            try {
+                if (directory != null && !directory.isEmpty()) {
+                    var directoryPath = configDir.resolve(directory);
+                    Files.createDirectories(directoryPath);
+                }
+                var prettyGson = new GsonBuilder().setPrettyPrinting().create();
+                Writer writer = Files.newBufferedWriter(filePath);
+                writer.write(prettyGson.toJson(config));
+                writer.close();
+                if (isLoggingEnabled) {
+                    var gson = new Gson();
+                    LOGGER.info(configName + " config written: " + gson.toJson(config));
+                }
+            } catch (Exception e) {
+                if (isLoggingEnabled) {
+                    LOGGER.error("Failed writing " + configName + " config: " + e.getMessage());
+                }
             }
         }
     }
