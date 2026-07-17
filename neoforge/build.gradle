@@ -1,5 +1,6 @@
 plugins {
     id 'com.gradleup.shadow'
+    id "com.modrinth.minotaur" version "2.+"
 }
 
 architectury {
@@ -54,4 +55,23 @@ shadowJar {
 
 remapJar {
     inputFile.set shadowJar.archiveFile
+}
+
+if (project.hasProperty('release_type')) {
+    tasks.register("publishMod") {
+        dependsOn(build)
+        finalizedBy(tasks.modrinth)
+    }
+
+    modrinth {
+        token = System.getenv("MODRINTH_API_KEY")
+        projectId = System.getenv("MODRINTH_PROJECT_ID") // This can be the project ID or the slug. Either will work!
+        versionName = "${project.version}"
+        versionNumber = "${project.version}-neoforge" // You don't need to set this manually. Will fail if Modrinth has this version already
+        versionType = release_type // This is the default -- can also be `beta` or `alpha`
+        uploadFile = remapJar
+        // One binary supports every 1.21.x patch, so publish it for all of them.
+        gameVersions = [rootProject.minecraft_version] + rootProject.additional_game_versions.tokenize(',')
+        loaders = ["neoforge"] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
+    }
 }
