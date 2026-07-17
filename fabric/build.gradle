@@ -32,10 +32,11 @@ dependencies {
 }
 
 processResources {
-    inputs.property 'version', project.version
+    def replaceProperties = [version: project.version]
+    inputs.properties replaceProperties
 
     filesMatching('fabric.mod.json') {
-        expand(project.properties)
+        expand replaceProperties
     }
 }
 

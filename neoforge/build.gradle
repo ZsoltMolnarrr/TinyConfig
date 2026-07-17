@@ -39,10 +39,11 @@ dependencies {
 }
 
 processResources {
-    inputs.property 'version', project.version
+    def replaceProperties = [version: project.version]
+    inputs.properties replaceProperties
 
     filesMatching('META-INF/neoforge.mods.toml') {
-        expand(project.properties)
+        expand replaceProperties
     }
 }
 
