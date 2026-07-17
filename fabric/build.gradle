@@ -36,9 +36,9 @@ configurations {
 }
 
 dependencies {
-    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+    implementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
 
-    common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
+    common(project(path: ':common')) { transitive = false }
     shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
 }
 
@@ -51,14 +51,17 @@ processResources {
     }
 }
 
-shadowJar {
-    configurations = [project.configurations.shadowBundle]
-    archiveClassifier = 'dev-shadow'
+// 26.1+ is unobfuscated: no remapJar, the shadow jar is the final artifact.
+jar {
+    archiveClassifier = 'raw'
 }
 
-remapJar {
-    inputFile.set shadowJar.archiveFile
+shadowJar {
+    configurations = [project.configurations.shadowBundle]
+    archiveClassifier = null
 }
+
+assemble.dependsOn shadowJar
 
 if (project.hasProperty('release_type')) {
     tasks.register("publishMod") {
@@ -73,8 +76,8 @@ if (project.hasProperty('release_type')) {
         versionName = "${project.version}"
         versionNumber = "${project.version}-fabric" // You don't need to set this manually. Will fail if Modrinth has this version already
         versionType = release_type // This is the default -- can also be `beta` or `alpha`
-        uploadFile = remapJar
-        // One binary supports every 1.21.x patch, so publish it for all of them.
+        uploadFile = shadowJar
+        // One binary supports every 26.x release, so publish it for all of them.
         gameVersions = [rootProject.minecraft_version] + rootProject.additional_game_versions.tokenize(',')
         loaders = ["fabric"] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
     }
