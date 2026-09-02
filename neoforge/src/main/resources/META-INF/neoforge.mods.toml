@@ -11,7 +11,7 @@ authors = "Daedelus"
 description = '''
 A very small config lib
 '''
-logoFile = "logo.png"
+iconFile = "logo.png"
 
 [[dependencies.tiny_config]]
 modId = "neoforge"
