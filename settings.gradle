@@ -11,4 +11,4 @@ rootProject.name = 'tiny_config'
 
 include 'common'
 include 'fabric'
-include 'neoforge'
+include 'forge'

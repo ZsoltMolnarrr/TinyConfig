@@ -1,5 +1,5 @@
 modLoader = "javafml"
-loaderVersion = "[4,)"
+loaderVersion = "[47,)"
 #issueTrackerURL = ""
 license = "CC0-1.0"
 
@@ -14,18 +14,15 @@ A very small config lib
 logoFile = "logo.png"
 
 [[dependencies.tiny_config]]
-modId = "neoforge"
-type = "required"
-versionRange = "[21,)"
+modId = "forge"
+mandatory = true
+versionRange = "[47,)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.tiny_config]]
 modId = "minecraft"
-type = "required"
-versionRange = "[1.21,)"
+mandatory = true
+versionRange = "[1.20.1,)"
 ordering = "NONE"
 side = "BOTH"
-
-[[mixins]]
-config = "tiny_config.mixins.json"
