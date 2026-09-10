@@ -1,6 +1,9 @@
 plugins {
     id 'com.gradleup.shadow'
+    id "me.modmuss50.mod-publish-plugin" version "2.1.1"
 }
+
+def platform = project.name;
 
 loom {
     forge {
@@ -52,4 +55,51 @@ shadowJar {
 
 remapJar {
     inputFile.set shadowJar.archiveFile
+}
+
+// Publishing is configured unconditionally: tasks only *run* when explicitly invoked
+// (e.g. `publishMod` in CI), and all credentials are lazy env providers, so a local
+// `build` — with none of the tokens present — is completely unaffected.
+def releaseTypeName = (project.findProperty('release_type') ?: 'beta').toString()
+
+// The maven coordinates stay at the bare `mod_version` (consumer mods pin it), so the
+// game version is appended here instead — keeping published version strings distinct
+// across the per-game-version branches.
+def publishedVersion = "${project.version}+${rootProject.minecraft_version}"
+
+// `publishMod` is the entry point invoked by the workflow; the plugin's own aggregate
+// task is `publishMods` (plural).
+tasks.register("publishMod") {
+    dependsOn(build)
+    finalizedBy(tasks.named("publishMods"))
+}
+
+publishMods {
+    file = remapJar.archiveFile          // Loom production jar (NOT the dev-shadow jar)
+    changelog = providers.provider { changelog_last_section() }   // lazy: read only at publish
+    type = releaseTypeName == "release" ? me.modmuss50.mpp.ReleaseType.STABLE
+            : releaseTypeName == "alpha" ? me.modmuss50.mpp.ReleaseType.ALPHA
+            : me.modmuss50.mpp.ReleaseType.BETA
+    version = "${publishedVersion}-${platform}"   // per-loader suffix → unique Modrinth version
+    displayName = "${publishedVersion}"
+    // NeoForge 1.20.1 is a fork of Forge 47.1 that kept the Forge packages and FML,
+    // so the same jar loads there; both loaders are tagged.
+    modLoaders.add("forge")
+    modLoaders.add("neoforge")
+
+    modrinth {
+        projectId = providers.environmentVariable("MODRINTH_PROJECT_RAW_ID")
+        accessToken = providers.environmentVariable("MODRINTH_API_KEY")
+        minecraftVersions.add(project.minecraft_version)
+    }
+
+    // Each platform publishes its own GitHub release under a distinct, platform-suffixed
+    // tag (e.g. `3.1.0.001+1.20.1-forge`), so the two publish jobs don't collide.
+    github {
+        repository = providers.environmentVariable("GH_OWNER")
+                .zip(providers.environmentVariable("GH_REPO")) { owner, repo -> "$owner/$repo" }
+        accessToken = providers.environmentVariable("GH_API_KEY")
+        tagName = "${publishedVersion}-${platform}"
+        commitish = providers.environmentVariable("GITHUB_SHA")
+    }
 }

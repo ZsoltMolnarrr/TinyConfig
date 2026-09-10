@@ -68,3 +68,9 @@ subprojects {
         }
     }
 }
+
+// Reads the topmost section of CHANGELOG.md (heading included) — used as the release
+// notes body by each platform's `publishMods` block.
+ext.changelog_last_section = { ->
+    return rootProject.file("CHANGELOG.md").text.split('\n# ')[0]
+}
